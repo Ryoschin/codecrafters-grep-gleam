@@ -28,21 +28,39 @@ pub fn main() {
 }
 
 fn match_pattern(input_line: String, pattern: String) -> Bool {
-  case string.length(pattern) {
-    1 -> string.contains(input_line, pattern)
-    2 -> {
-      case pattern {
-        "\\d" -> contains_number(input_line)
-        "\\w" -> is_alphanumeric(input_line)
-        _ -> {
+  case string.starts_with(pattern, "[") {
+    True -> {
+      case string.split_once(string.drop_left(pattern, 1), "]") {
+        Ok(pattern_list) -> {
+          let #(pattern_chars, _) = pattern_list
+          let #(source, check) = compare_str_len(pattern_chars, input_line)
+          list.any(source, fn(c) { string.contains(check, c) })
+        }
+        Error(_) -> {
           io.println("Unhandled pattern: " <> pattern)
           False
         }
       }
     }
-    _ -> {
-      io.println("Unhandled pattern: " <> pattern)
-      False
+
+    False -> {
+      case string.length(pattern) {
+        1 -> string.contains(input_line, pattern)
+        2 -> {
+          case pattern {
+            "\\d" -> contains_number(input_line)
+            "\\w" -> is_alphanumeric(input_line)
+            _ -> {
+              io.println("Unhandled pattern: " <> pattern)
+              False
+            }
+          }
+        }
+        _ -> {
+          io.println("Unhandled pattern: " <> pattern)
+          False
+        }
+      }
     }
   }
 }
@@ -72,6 +90,17 @@ fn is_az(char: String) {
   let assert [c, ..] = string.to_utf_codepoints(char)
   let c = string.utf_codepoint_to_int(c)
   c >= a && c <= z
+}
+
+fn compare_str_len(str1: String, str2: String) -> #(List(String), String) {
+  case string.length(str1) >= string.length(str2) {
+    True -> {
+      #(string.to_graphemes(str1), str2)
+    }
+    False -> {
+      #(string.to_graphemes(str2), str1)
+    }
+  }
 }
 
 @external(erlang, "erlang", "halt")
