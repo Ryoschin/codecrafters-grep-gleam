@@ -34,19 +34,14 @@ fn match_pattern(input_line: String, pattern: String) -> Bool {
       case string.split_once(string.drop_left(pattern, 1), "]") {
         Ok(pattern_list) -> {
           let #(check, _) = pattern_list
-          io.debug(check)
           let res = result.unwrap(string.split_once(check, "^"), #("^", check))
           let #(chars, source) = #(string.to_graphemes(res.1), input_line)
-          io.debug(chars)
-          io.println(source)
 
           case res.0 != "^" {
             True -> {
-              io.println("here 11")
               list.any(chars, fn(c) { !string.contains(source, c) })
             }
             False -> {
-              io.println("here 12")
               list.any(chars, fn(c) { string.contains(source, c) })
             }
           }
