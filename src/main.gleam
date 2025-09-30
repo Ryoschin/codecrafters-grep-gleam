@@ -3,6 +3,7 @@ import gleam/erlang
 import gleam/int
 import gleam/io
 import gleam/list
+import gleam/result
 import gleam/string
 
 pub fn main() {
@@ -32,9 +33,23 @@ fn match_pattern(input_line: String, pattern: String) -> Bool {
     True -> {
       case string.split_once(string.drop_left(pattern, 1), "]") {
         Ok(pattern_list) -> {
-          let #(pattern_chars, _) = pattern_list
-          let #(source, check) = compare_str_len(pattern_chars, input_line)
-          list.any(source, fn(c) { string.contains(check, c) })
+          let #(check, _) = pattern_list
+          io.debug(check)
+          let res = result.unwrap(string.split_once(check, "^"), #("^", check))
+          let #(chars, source) = #(string.to_graphemes(res.1), input_line)
+          io.debug(chars)
+          io.println(source)
+
+          case res.0 != "^" {
+            True -> {
+              io.println("here 11")
+              list.any(chars, fn(c) { !string.contains(source, c) })
+            }
+            False -> {
+              io.println("here 12")
+              list.any(chars, fn(c) { string.contains(source, c) })
+            }
+          }
         }
         Error(_) -> {
           io.println("Unhandled pattern: " <> pattern)
@@ -90,17 +105,6 @@ fn is_az(char: String) {
   let assert [c, ..] = string.to_utf_codepoints(char)
   let c = string.utf_codepoint_to_int(c)
   c >= a && c <= z
-}
-
-fn compare_str_len(str1: String, str2: String) -> #(List(String), String) {
-  case string.length(str1) >= string.length(str2) {
-    True -> {
-      #(string.to_graphemes(str1), str2)
-    }
-    False -> {
-      #(string.to_graphemes(str2), str1)
-    }
-  }
 }
 
 @external(erlang, "erlang", "halt")
